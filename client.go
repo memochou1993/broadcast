@@ -89,8 +89,8 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	client := &Client{hub: hub, conn: conn, messages: make(chan []byte, 256)}
-	client.hub.register <- client
-	go client.writePump()
-	go client.readPump()
+	c := &Client{hub: hub, conn: conn, messages: make(chan []byte, 256)}
+	c.hub.register <- c
+	go c.writePump()
+	go c.readPump()
 }
