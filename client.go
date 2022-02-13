@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"time"
@@ -26,8 +27,8 @@ var (
 )
 
 type Client struct {
-	hub      *Hub
 	conn     *websocket.Conn
+	hub      *Hub
 	messages chan []byte
 }
 
@@ -47,7 +48,9 @@ func (c *Client) readPump() {
 			}
 			break
 		}
-		c.hub.broadcast <- message
+		if err := c.hub.rdb.Publish(context.Background(), "default", message).Err(); err != nil {
+			log.Println(err)
+		}
 	}
 }
 
@@ -89,8 +92,12 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	c := &Client{hub: hub, conn: conn, messages: make(chan []byte, 256)}
-	c.hub.register <- c
-	go c.writePump()
-	go c.readPump()
+	client := &Client{
+		hub:      hub,
+		conn:     conn,
+		messages: make(chan []byte, 256),
+	}
+	client.hub.register <- client
+	go client.writePump()
+	go client.readPump()
 }

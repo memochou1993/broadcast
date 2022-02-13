@@ -1,13 +1,22 @@
 package main
 
+import (
+	"context"
+	"github.com/go-redis/redis/v8"
+)
+
 type Hub struct {
 	clients    map[*Client]bool
-	broadcast  chan []byte
+	rdb        *redis.Client
 	register   chan *Client
 	unregister chan *Client
 }
 
 func (h *Hub) run() {
+	ps := h.rdb.Subscribe(context.Background(), "default")
+	defer func() {
+		_ = ps.Close()
+	}()
 	for {
 		select {
 		case client := <-h.register:
@@ -17,10 +26,10 @@ func (h *Hub) run() {
 				delete(h.clients, client)
 				close(client.messages)
 			}
-		case message := <-h.broadcast:
+		case msg := <-ps.Channel():
 			for client := range h.clients {
 				select {
-				case client.messages <- message:
+				case client.messages <- []byte(msg.Payload):
 				default:
 					delete(h.clients, client)
 					close(client.messages)
@@ -32,9 +41,9 @@ func (h *Hub) run() {
 
 func newHub() *Hub {
 	return &Hub{
-		broadcast:  make(chan []byte),
+		clients:    make(map[*Client]bool),
+		rdb:        NewRDB(),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
-		clients:    make(map[*Client]bool),
 	}
 }
