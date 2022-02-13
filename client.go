@@ -43,7 +43,9 @@ func (c *Client) readPump() {
 	for {
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
-			log.Println(err)
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				log.Println(err)
+			}
 			break
 		}
 		if err := c.hub.rdb.Publish(context.Background(), "default", message).Err(); err != nil {
