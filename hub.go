@@ -13,11 +13,18 @@ type Hub struct {
 	unregister chan *Client
 }
 
-func (h *Hub) run() {
-	ctx := context.Background()
+func (h *Hub) run(ctx context.Context, quit chan<- struct{}) {
 	sub := h.rdb.Subscribe(ctx, "default")
 	defer func() {
-		_ = sub.Close()
+		log.Println("Closing Redis subscription...")
+		if err := sub.Close(); err != nil {
+			log.Println(err)
+		}
+		log.Println("Closing Redis connection...")
+		if err := h.rdb.Close(); err != nil {
+			log.Println(err)
+		}
+		quit <- struct{}{}
 	}()
 	if _, err := sub.Receive(ctx); err != nil {
 		log.Fatal(err)
@@ -40,6 +47,8 @@ func (h *Hub) run() {
 					close(client.messages)
 				}
 			}
+		case <-ctx.Done():
+			return
 		}
 	}
 }

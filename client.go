@@ -38,17 +38,12 @@ func (c *Client) readPump() {
 		_ = c.conn.Close()
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
+	c.conn.SetPongHandler(func(string) error { _ = c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 	_ = c.conn.SetReadDeadline(time.Now().Add(pongWait))
-	c.conn.SetPongHandler(func(string) error {
-		_ = c.conn.SetReadDeadline(time.Now().Add(pongWait))
-		return nil
-	})
 	for {
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Println(err)
-			}
+			log.Println(err)
 			break
 		}
 		if err := c.hub.rdb.Publish(context.Background(), "default", message).Err(); err != nil {
