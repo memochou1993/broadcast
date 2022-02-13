@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/go-redis/redis/v8"
 	"log"
+	"sync"
 )
 
 type Hub struct {
@@ -13,7 +14,8 @@ type Hub struct {
 	unregister chan *Client
 }
 
-func (h *Hub) run(ctx context.Context, quit chan<- struct{}) {
+func (h *Hub) run(ctx context.Context, wg *sync.WaitGroup) {
+	wg.Add(1)
 	sub := h.rdb.Subscribe(ctx, "default")
 	defer func() {
 		log.Println("Closing Redis subscription...")
@@ -24,7 +26,7 @@ func (h *Hub) run(ctx context.Context, quit chan<- struct{}) {
 		if err := h.rdb.Close(); err != nil {
 			log.Println(err)
 		}
-		quit <- struct{}{}
+		wg.Done()
 	}()
 	if _, err := sub.Receive(ctx); err != nil {
 		log.Fatal(err)

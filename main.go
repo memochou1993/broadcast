@@ -6,16 +6,15 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 )
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
-	quit := make(chan struct{})
+	wg := sync.WaitGroup{}
 	hub := newHub()
-	go hub.run(ctx, quit)
-	srv := http.Server{
-		Addr: ":8080",
-	}
+	go hub.run(ctx, &wg)
+	srv := http.Server{Addr: ":8080"}
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		serveWS(hub, w, r)
 	})
@@ -32,5 +31,5 @@ func main() {
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 		log.Fatal(err)
 	}
-	<-quit
+	wg.Wait()
 }
