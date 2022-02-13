@@ -7,15 +7,14 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"sync"
 	"time"
 )
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
-	wg := sync.WaitGroup{}
+	quit := make(chan struct{})
 	hub := newHub()
-	go hub.run(ctx, &wg)
+	go hub.run(ctx)
 	r := mux.NewRouter()
 	r.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		serveWS(hub, w, r)
@@ -35,9 +34,10 @@ func main() {
 			log.Println(err)
 		}
 		cancel()
+		close(quit)
 	}()
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 		log.Fatal(err)
 	}
-	wg.Wait()
+	<-quit
 }

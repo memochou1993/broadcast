@@ -27,9 +27,8 @@ var (
 )
 
 type Client struct {
-	conn     *websocket.Conn
-	hub      *Hub
-	messages chan []byte
+	conn *websocket.Conn
+	hub  *Hub
 }
 
 func (c *Client) readPump() {
@@ -56,23 +55,25 @@ func (c *Client) readPump() {
 
 func (c *Client) writePump() {
 	ticker := time.NewTicker(pingPeriod)
+	ctx := context.Background()
+	sub := c.hub.rdb.Subscribe(ctx, "default")
+	if _, err := sub.Receive(ctx); err != nil {
+		log.Fatal(err)
+	}
 	defer func() {
 		ticker.Stop()
 		_ = c.conn.Close()
+		_ = sub.Close()
 	}()
 	for {
 		select {
-		case message, ok := <-c.messages:
+		case msg := <-sub.Channel():
 			_ = c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-			if !ok {
-				_ = c.conn.WriteMessage(websocket.CloseMessage, []byte{})
-				return
-			}
 			w, err := c.conn.NextWriter(websocket.TextMessage)
 			if err != nil {
 				return
 			}
-			if _, err := w.Write(message); err != nil {
+			if _, err := w.Write([]byte(msg.Payload)); err != nil {
 				log.Println(err)
 			}
 			if err := w.Close(); err != nil {
@@ -93,9 +94,8 @@ func serveWS(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 	client := &Client{
-		hub:      hub,
-		conn:     conn,
-		messages: make(chan []byte, 256),
+		conn: conn,
+		hub:  hub,
 	}
 	client.hub.register <- client
 	go client.writePump()
