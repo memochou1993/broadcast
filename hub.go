@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/go-redis/redis/v8"
+	"log"
 )
 
 type Hub struct {
@@ -13,10 +14,14 @@ type Hub struct {
 }
 
 func (h *Hub) run() {
-	ps := h.rdb.Subscribe(context.Background(), "default")
+	ctx := context.Background()
+	sub := h.rdb.Subscribe(ctx, "default")
 	defer func() {
-		_ = ps.Close()
+		_ = sub.Close()
 	}()
+	if _, err := sub.Receive(ctx); err != nil {
+		log.Fatal(err)
+	}
 	for {
 		select {
 		case client := <-h.register:
@@ -26,7 +31,7 @@ func (h *Hub) run() {
 				delete(h.clients, client)
 				close(client.messages)
 			}
-		case msg := <-ps.Channel():
+		case msg := <-sub.Channel():
 			for client := range h.clients {
 				select {
 				case client.messages <- []byte(msg.Payload):
