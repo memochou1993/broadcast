@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"embed"
 	"github.com/gorilla/mux"
+	_ "github.com/joho/godotenv/autoload"
 	"log"
 	"net/http"
 	"os"
@@ -10,14 +12,20 @@ import (
 	"time"
 )
 
+var (
+	//go:embed index.html
+	view embed.FS
+)
+
 func main() {
 	quit := make(chan struct{})
 	r := mux.NewRouter()
+	r.Handle("/", http.FileServer(http.FS(view)))
 	r.HandleFunc("/", serveView).Methods(http.MethodGet)
 	r.HandleFunc("/{channel}/ws", serveWS).Methods(http.MethodGet)
 	srv := http.Server{
 		Handler:      r,
-		Addr:         ":8080",
+		Addr:         ":80",
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
