@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Distributed Chatroom</title>
+    <style>
+        body {
+            margin: 0 24px;
+        }
+        #messages {
+            border: 1px solid black;
+            border-radius: 4px;
+            height: 400px;
+            overflow: scroll;
+        }
+        p {
+            margin: 8px 12px;
+        }
+        #form {
+            margin: 0 8px;
+        }
+        table {
+            margin: 12px 0;
+        }
+        td {
+            width: 80px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Distributed Chatroom</h1>
+    <div id="messages"></div>
+    <form id="form">
+        <table>
+            <tr>
+                <td>Name</td>
+                <td><input type="text" id="name"></td>
+            </tr>
+            <tr>
+                <td>Message</td>
+                <td><input autocomplete="off" autofocus id="message"></td>
+            </tr>
+        </table>
+        <input type="submit">
+    </form>
+    <script>
+        const messages = document.querySelector('#messages');
+        const form = document.querySelector('#form');
+        const name = document.querySelector('#name');
+        const message = document.querySelector('#message');
+        const params = new URLSearchParams(location.search);
+        const channel = params.get('channel') || 'general';
+        const id = Math.floor(Math.random() * (1000 - 100) + 100);
+        const conn = new WebSocket(`ws://localhost:8080/${channel}/ws`);
+        conn.onmessage = (e) => {
+            const { n, m } = JSON.parse(e.data);
+            const msg = document.createElement('p');
+            msg.textContent = `${n}: ${m}`;
+            messages.appendChild(msg);
+            messages.scrollTop = messages.scrollHeight;
+        };
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (!message.value.trim()) {
+                return;
+            }
+            conn.send(JSON.stringify({
+                n: `User ${id}`,
+                m: message.value,
+            }));
+            message.value = '';
+        });
+        name.value = `User ${id}`;
+    </script>
+</body>
+</html>

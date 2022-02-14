@@ -14,6 +14,9 @@ func main() {
 	quit := make(chan struct{})
 	hub := newHub()
 	r := mux.NewRouter()
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "index.html")
+	})
 	r.HandleFunc("/{channel}/ws", func(w http.ResponseWriter, r *http.Request) {
 		serveWS(hub, w, r)
 	}).Methods(http.MethodGet)
