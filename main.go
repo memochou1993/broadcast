@@ -11,10 +11,8 @@ import (
 )
 
 func main() {
-	ctx, cancel := context.WithCancel(context.Background())
 	quit := make(chan struct{})
 	hub := newHub()
-	go hub.run(ctx)
 	r := mux.NewRouter()
 	r.HandleFunc("/{channel}/ws", func(w http.ResponseWriter, r *http.Request) {
 		serveWS(hub, w, r)
@@ -33,7 +31,6 @@ func main() {
 		if err := srv.Shutdown(context.Background()); err != nil {
 			log.Println(err)
 		}
-		cancel()
 		close(quit)
 	}()
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {

@@ -35,7 +35,6 @@ type Client struct {
 
 func (c *Client) readPump() {
 	defer func() {
-		c.hub.unregister <- c
 		_ = c.conn.Close()
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
@@ -96,7 +95,6 @@ func serveWS(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		hub:     hub,
 		channel: mux.Vars(r)["channel"],
 	}
-	client.hub.register <- client
 	go client.writePump()
 	go client.readPump()
 }
