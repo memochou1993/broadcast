@@ -12,14 +12,9 @@ import (
 
 func main() {
 	quit := make(chan struct{})
-	hub := newHub()
 	r := mux.NewRouter()
-	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "index.html")
-	})
-	r.HandleFunc("/{channel}/ws", func(w http.ResponseWriter, r *http.Request) {
-		serveWS(hub, w, r)
-	}).Methods(http.MethodGet)
+	r.HandleFunc("/", serveView).Methods(http.MethodGet)
+	r.HandleFunc("/{channel}/ws", serveWS).Methods(http.MethodGet)
 	srv := http.Server{
 		Handler:      r,
 		Addr:         ":8080",
@@ -40,4 +35,21 @@ func main() {
 		log.Fatal(err)
 	}
 	<-quit
+}
+
+func serveView(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "index.html")
+}
+
+func serveWS(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	client := &Client{
+		conn:    conn,
+		channel: mux.Vars(r)["channel"],
+	}
+	go client.writePump()
+	go client.readPump()
 }

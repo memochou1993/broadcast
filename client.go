@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"time"
@@ -29,7 +28,6 @@ var (
 
 type Client struct {
 	conn    *websocket.Conn
-	hub     *Hub
 	channel string
 }
 
@@ -48,7 +46,7 @@ func (c *Client) readPump() {
 			}
 			break
 		}
-		if err := c.hub.rdb.Publish(context.Background(), c.channel, message).Err(); err != nil {
+		if err := RDB.Publish(context.Background(), c.channel, message).Err(); err != nil {
 			log.Println(err)
 		}
 	}
@@ -56,7 +54,7 @@ func (c *Client) readPump() {
 
 func (c *Client) writePump() {
 	ticker := time.NewTicker(pingPeriod)
-	sub := c.hub.rdb.Subscribe(context.Background(), c.channel)
+	sub := RDB.Subscribe(context.Background(), c.channel)
 	defer func() {
 		ticker.Stop()
 		_ = c.conn.Close()
@@ -83,18 +81,4 @@ func (c *Client) writePump() {
 			}
 		}
 	}
-}
-
-func serveWS(hub *Hub, w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	client := &Client{
-		conn:    conn,
-		hub:     hub,
-		channel: mux.Vars(r)["channel"],
-	}
-	go client.writePump()
-	go client.readPump()
 }
