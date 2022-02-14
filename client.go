@@ -55,11 +55,7 @@ func (c *Client) readPump() {
 
 func (c *Client) writePump() {
 	ticker := time.NewTicker(pingPeriod)
-	ctx := context.Background()
-	sub := c.hub.rdb.Subscribe(ctx, "default")
-	if _, err := sub.Receive(ctx); err != nil {
-		log.Fatal(err)
-	}
+	sub := c.hub.rdb.Subscribe(context.Background(), "default")
 	defer func() {
 		ticker.Stop()
 		_ = c.conn.Close()
