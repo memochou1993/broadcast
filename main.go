@@ -16,7 +16,7 @@ func main() {
 	hub := newHub()
 	go hub.run(ctx)
 	r := mux.NewRouter()
-	r.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/{channel}/ws", func(w http.ResponseWriter, r *http.Request) {
 		serveWS(hub, w, r)
 	}).Methods(http.MethodGet)
 	srv := http.Server{
