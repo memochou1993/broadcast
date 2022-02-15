@@ -1,4 +1,4 @@
-distributed-chatroom
+distributed-broadcast
 ===
 
 # Development

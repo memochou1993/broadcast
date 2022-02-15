@@ -2,7 +2,7 @@ version: "3"
 
 services:
   app:
-    image: memochou1993/distributed-chatroom
+    image: memochou1993/distributed-broadcast
     container_name: app
     depends_on:
       - redis
@@ -15,7 +15,7 @@ services:
       - backend
   redis:
     image: redis:latest
-    container_name: distributed-chatroom-redis
+    container_name: distributed-broadcast-redis
     restart: always
     ports:
       - "6379:6379"

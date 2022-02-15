@@ -1,4 +1,4 @@
-module github.com/memochou1993/distributed-chatroom
+module github.com/memochou1993/distributed-broadcast
 
 go 1.17
 
