@@ -2,8 +2,8 @@ version: "2"
 
 services:
   app:
+    image: memochou1993/distributed-chatroom
     container_name: app
-    build: .
     restart: always
     env_file:
       - .env
