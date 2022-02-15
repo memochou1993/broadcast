@@ -52,9 +52,8 @@
         const name = document.querySelector('#name');
         const message = document.querySelector('#message');
         const params = new URLSearchParams(location.search);
-        const channel = params.get('channel') || 'general';
         const id = Math.floor(Math.random() * (1000 - 100) + 100);
-        const conn = new WebSocket(`ws://localhost/${channel}/ws`);
+        const conn = new WebSocket('ws://localhost/ws');
         conn.onmessage = (e) => {
             const { n, m } = JSON.parse(e.data);
             const msg = document.createElement('p');

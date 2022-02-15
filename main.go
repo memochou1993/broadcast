@@ -22,7 +22,7 @@ func main() {
 	r := mux.NewRouter()
 	r.Handle("/", http.FileServer(http.FS(view)))
 	r.HandleFunc("/", serveView).Methods(http.MethodGet)
-	r.HandleFunc("/{channel}/ws", serveWS).Methods(http.MethodGet)
+	r.HandleFunc("/ws", serveWS).Methods(http.MethodGet)
 	srv := http.Server{
 		Handler:      r,
 		Addr:         ":80",
@@ -55,8 +55,7 @@ func serveWS(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 	client := &Client{
-		conn:    conn,
-		channel: mux.Vars(r)["channel"],
+		conn: conn,
 	}
 	go client.writePump()
 	go client.readPump()

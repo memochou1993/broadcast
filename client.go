@@ -16,6 +16,10 @@ const (
 	maxMessageSize = 512
 )
 
+const (
+	channelGeneral = "general"
+)
+
 var (
 	upgrader = websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
@@ -27,8 +31,7 @@ var (
 )
 
 type Client struct {
-	conn    *websocket.Conn
-	channel string
+	conn *websocket.Conn
 }
 
 func (c *Client) readPump() {
@@ -46,7 +49,7 @@ func (c *Client) readPump() {
 			}
 			break
 		}
-		if err := RDB.Publish(context.Background(), c.channel, message).Err(); err != nil {
+		if err := RDB.Publish(context.Background(), channelGeneral, message).Err(); err != nil {
 			log.Println(err)
 		}
 	}
@@ -54,7 +57,7 @@ func (c *Client) readPump() {
 
 func (c *Client) writePump() {
 	ticker := time.NewTicker(pingPeriod)
-	sub := RDB.Subscribe(context.Background(), c.channel)
+	sub := RDB.Subscribe(context.Background(), channelGeneral)
 	defer func() {
 		ticker.Stop()
 		_ = c.conn.Close()
