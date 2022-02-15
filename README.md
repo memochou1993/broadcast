@@ -1,7 +1,7 @@
 distributed-chatroom
 ===
 
-# Usage
+# Development
 
 Run a Redis database.
 
@@ -21,12 +21,6 @@ Run the server.
 
 ```BASH
 go run ./
-```
-
-Or run the server with docker compose.
-
-```BASH
-docker-compose up -d
 ```
 
 Visit <http://localhost>
