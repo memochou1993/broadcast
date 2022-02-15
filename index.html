@@ -2,8 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Distributed Chatroom</title>
     <style>
@@ -37,7 +36,7 @@
         <table>
             <tr>
                 <td>Name</td>
-                <td><label for="name"></label><input type="text" id="name"></td>
+                <td><label for="name"></label><input type="text" id="name" readonly></td>
             </tr>
             <tr>
                 <td>Message</td>
@@ -51,7 +50,6 @@
         const form = document.querySelector('#form');
         const name = document.querySelector('#name');
         const message = document.querySelector('#message');
-        const params = new URLSearchParams(location.search);
         const id = Math.floor(Math.random() * (1000 - 100) + 100);
         const conn = new WebSocket('ws://localhost/ws');
         conn.onmessage = (e) => {
