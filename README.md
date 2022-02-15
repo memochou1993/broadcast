@@ -1,4 +1,4 @@
-distributed-broadcast
+broadcast
 ===
 
 # Development

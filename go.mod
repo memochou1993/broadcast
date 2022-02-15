@@ -1,4 +1,4 @@
-module github.com/memochou1993/distributed-broadcast
+module github.com/memochou1993/broadcast
 
 go 1.17
 
